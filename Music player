@@ -1,0 +1,98 @@
+import os
+import pygame
+from tkinter import filedialog, Tk
+
+class MusicPlayer:
+    def __init__(self):
+        self.playing = False
+        self.paused = False
+        self.playlist = []
+        self.current_index = 0
+
+        pygame.init()
+        pygame.mixer.init()
+
+    def load_music_folder(self, folder_path):
+        self.playlist.clear()
+        for file_name in os.listdir(folder_path):
+            if file_name.endswith('.mp3'):  # Adjust file format as needed
+                self.playlist.append(os.path.join(folder_path, file_name))
+
+    def play(self):
+        if not self.playlist:
+            print("Playlist is empty.")
+            return
+
+        if not self.playing:
+            pygame.mixer.music.load(self.playlist[self.current_index])
+            pygame.mixer.music.play()
+            self.playing = True
+            print("Playing:", os.path.basename(self.playlist[self.current_index]))
+        elif self.paused:
+            pygame.mixer.music.unpause()
+            self.paused = False
+            print("Resumed:", os.path.basename(self.playlist[self.current_index]))
+        else:
+            print("Already playing.")
+
+    def pause(self):
+        if self.playing and not self.paused:
+            pygame.mixer.music.pause()
+            self.paused = True
+            print("Paused:", os.path.basename(self.playlist[self.current_index]))
+        else:
+            print("Not playing or already paused.")
+
+    def stop(self):
+        if self.playing:
+            pygame.mixer.music.stop()
+            self.playing = False
+            self.paused = False
+            print("Stopped:", os.path.basename(self.playlist[self.current_index]))
+        else:
+            print("Not playing.")
+
+    def next_track(self):
+        if self.playing:
+            self.stop()
+        self.current_index = (self.current_index + 1) % len(self.playlist)
+        self.play()
+
+    def prev_track(self):
+        if self.playing:
+            self.stop()
+        self.current_index = (self.current_index - 1) % len(self.playlist)
+        self.play()
+
+def select_folder():
+    root = Tk()
+    root.withdraw()
+    folder_path = filedialog.askdirectory()
+    root.destroy()
+    return folder_path
+
+if __name__ == "__main__":
+    player = MusicPlayer()
+
+    folder_path = select_folder()
+    if folder_path:
+        player.load_music_folder(folder_path)
+        while True:
+            command = input("Enter command (play/pause/stop/next/prev/exit): ").lower()
+            if command == "play":
+                player.play()
+            elif command == "pause":
+                player.pause()
+            elif command == "stop":
+                player.stop()
+            elif command == "next":
+                player.next_track()
+            elif command == "prev":
+                player.prev_track()
+            elif command == "exit":
+                player.stop()
+                break
+            else:
+                print("Invalid command.")
+    else:
+        print("No folder selected.")
